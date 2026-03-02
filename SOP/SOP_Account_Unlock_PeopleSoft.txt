@@ -1,0 +1,10 @@
+SOP ID: PS-LCK-002
+Title: PeopleSoft Account Unlock (Intruder Lockout)
+Applicability: Users locked out after 3+ failed attempts.
+
+STEPS:
+1. Security Check: Review the 'last_failed_login_ip'. If from an unknown region, escalate to Security Team.
+2. Status Verification: Check if 'Account_Status' is 'LOCKED'.
+3. Action: Call 'ps_api_unlock_user'. This resets the 'Failed_Login_Count' to 0.
+4. Logging: Record the unlock event in the Incident Log with a timestamp.
+5. User Follow-up: Advise the user to clear browser cache before re-attempting.
