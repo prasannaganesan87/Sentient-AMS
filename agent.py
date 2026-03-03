@@ -51,7 +51,7 @@ def classify_incident(state: AgentState):
     response = llm.invoke(messages)
     category = response.content.strip()
     #print(category)
-    time.sleep(3)
+    time.sleep(1)
     
     return {
         "category": category, 
@@ -80,7 +80,7 @@ def retrieve_sop(state: AgentState):
         else:
             sop_content = f"Error: Could not find {sop_filename}"
             
-    time.sleep(3)
+    time.sleep(1)
 
     return {
         "current_sop": sop_content,
@@ -115,7 +115,7 @@ def determine_action(state: AgentState):
         proposed_tool = response.tool_calls[0]["name"]
         tool_args = response.tool_calls[0]["args"]
         
-    time.sleep(3)
+    time.sleep(1)
 
     return {
         "proposed_tool": proposed_tool,
@@ -145,8 +145,8 @@ def execute_action(state: AgentState):
         result = reset_peoplesoft_pwd.invoke(tool_args)
         is_resolved = True
         
-    time.sleep(3)
-    
+    time.sleep(1)
+
     return {
         "is_resolved": is_resolved,
         "action_logs": state.get("action_logs", []) + [log, f"Tool Result: {result}"]
