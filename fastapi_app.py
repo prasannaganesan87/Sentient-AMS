@@ -20,7 +20,9 @@ class ResetRequest(BaseModel):
 def get_user_status(user_id: str):
     if user_id not in USER_DB:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"user_id": user_id, "status": USER_DB[user_id]["status"]}
+    user_data = USER_DB[user_id].copy()
+    user_data["user_id"] = user_id
+    return user_data
 
 @app.post("/api/peoplesoft/unlock")
 def unlock_account(req: UnlockRequest):
