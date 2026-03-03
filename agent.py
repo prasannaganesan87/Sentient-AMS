@@ -1,11 +1,13 @@
 import os
-import requests
 from typing import TypedDict, List, Dict, Any, Literal
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
+
+from agent_tools import unlock_peoplesoft_account, reset_peoplesoft_pwd
+import time
 
 load_dotenv()
 
@@ -17,6 +19,7 @@ class AgentState(TypedDict):
     current_sop: str
     action_logs: List[str]
     proposed_tool: str
+    tool_args: dict
     is_resolved: bool
 
 # Initialize LLM
@@ -26,26 +29,7 @@ class AgentState(TypedDict):
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 
-# Mock Tools to call FastAPI
-FASTAPI_URL = "http://localhost:8000"
 
-def mock_peoplesoft_api_unlock_account(user_id: str) -> str:
-    try:
-        response = requests.post(f"{FASTAPI_URL}/api/peoplesoft/unlock", json={"user_id": user_id})
-        if response.status_code == 200:
-            return response.json().get("message", f"SUCCESS: unlocked {user_id}")
-        return f"FAILED: API returned {response.status_code} - {response.text}"
-    except Exception as e:
-        return f"FAILED to call API: {str(e)}"
-
-def mock_peoplesoft_api_reset_password(user_id: str) -> str:
-    try:
-        response = requests.post(f"{FASTAPI_URL}/api/peoplesoft/reset_password", json={"user_id": user_id})
-        if response.status_code == 200:
-            return response.json().get("message", f"SUCCESS: reset {user_id}")
-        return f"FAILED: API returned {response.status_code} - {response.text}"
-    except Exception as e:
-        return f"FAILED to call API: {str(e)}"
 
 # Nodes
 def classify_incident(state: AgentState):
@@ -66,7 +50,8 @@ def classify_incident(state: AgentState):
     messages = [HumanMessage(content=prompt)]
     response = llm.invoke(messages)
     category = response.content.strip()
-    print(category)
+    #print(category)
+    time.sleep(3)
     
     return {
         "category": category, 
@@ -95,6 +80,8 @@ def retrieve_sop(state: AgentState):
         else:
             sop_content = f"Error: Could not find {sop_filename}"
             
+    time.sleep(3)
+
     return {
         "current_sop": sop_content,
         "action_logs": state.get("action_logs", []) + [log, f"Read SOP: {sop_filename}"]
@@ -102,18 +89,38 @@ def retrieve_sop(state: AgentState):
 
 def determine_action(state: AgentState):
     log = f"Node [Action Node]: Determining tool based on SOP."
-    category = state.get("category", "")
+    
+    incident_details = state.get("incident_details", "")
+    current_sop = state.get("current_sop", "")
+    
+    prompt = f"""
+    You are an L1 Support Agent. Review the incident details and the SOP document provided.
+    Based on the SOP, determine which tool you must call and extract the necessary arguments (like user_id) from the incident.
+    
+    Incident:
+    {incident_details}
+    
+    SOP:
+    {current_sop}
+    """
+    
+    llm_with_tools = llm.bind_tools([unlock_peoplesoft_account, reset_peoplesoft_pwd])
+    messages = [HumanMessage(content=prompt)]
+    response = llm_with_tools.invoke(messages)
     
     proposed_tool = "None"
+    tool_args = {}
     
-    if category == "Account_Unlock":
-        proposed_tool = "unlock_peoplesoft_account"
-    elif category == "Password_Reset":
-        proposed_tool = "reset_peoplesoft_pwd"
+    if response.tool_calls:
+        proposed_tool = response.tool_calls[0]["name"]
+        tool_args = response.tool_calls[0]["args"]
         
+    time.sleep(3)
+
     return {
         "proposed_tool": proposed_tool,
-        "action_logs": state.get("action_logs", []) + [log, f"Identified Required Tool: {proposed_tool}"]
+        "tool_args": tool_args,
+        "action_logs": state.get("action_logs", []) + [log, f"LLM Selected Tool: {proposed_tool} with args {tool_args}"]
     }
 
 def human_approval_check(state: AgentState):
@@ -126,24 +133,20 @@ def human_approval_check(state: AgentState):
 def execute_action(state: AgentState):
     log = f"Node [Execution Sim]: Executing action."
     proposed_tool = state.get("proposed_tool", "")
-    incident_details = state.get("incident_details", "")
-    
-    # Very basic naive extraction of user id for mock execution
-    # In a real app the LLM would extract this in the determine_action node
-    user_id = "user"
-    if "jdoe" in incident_details.lower(): user_id = "jdoe"
-    elif "msmith" in incident_details.lower(): user_id = "msmith"
+    tool_args = state.get("tool_args", {})
     
     result = "No Action Taken and Escalated."
     is_resolved = False
     
     if proposed_tool == "unlock_peoplesoft_account":
-        result = mock_peoplesoft_api_unlock_account(user_id)
+        result = unlock_peoplesoft_account.invoke(tool_args)
         is_resolved = True
     elif proposed_tool == "reset_peoplesoft_pwd":
-        result = mock_peoplesoft_api_reset_password(user_id)
+        result = reset_peoplesoft_pwd.invoke(tool_args)
         is_resolved = True
         
+    time.sleep(3)
+    
     return {
         "is_resolved": is_resolved,
         "action_logs": state.get("action_logs", []) + [log, f"Tool Result: {result}"]

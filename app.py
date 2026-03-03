@@ -8,7 +8,7 @@ from agent import graph, AgentState
 from langgraph.types import Command
 
 # Set Streamlit Page Config
-st.set_page_config(page_title="AIMS Dashboard", page_icon="🤖", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Agentic AMS Dashboard", page_icon="🤖", layout="wide", initial_sidebar_state="expanded")
 
 # --- Custom CSS for "Techy" But Clean Theme ---
 st.markdown("""
