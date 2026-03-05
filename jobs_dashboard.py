@@ -43,11 +43,11 @@ st.markdown("""
     .panel {
         background: #ffffff;
         border-radius: 12px;
-        padding: 24px;
+        padding: 2px;
         border: 1px solid #e0e6ed;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         height: 100%;
-        min-height: 600px;
+        min-height: 1px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -121,10 +121,19 @@ with col2:
         
         st.markdown("<br><b>Execution Log:</b>", unsafe_allow_html=True)
         # Using st.info or st.code to display the log nicely
-        st.info(st.session_state.selected_job_log)
+        #st.info(st.session_state.selected_job_log)
         
-        # Alternatively display as code block
-        st.code(st.session_state.selected_job_log, language="text")
+        # Alternatively display as code block with increased height
+        #st.code(st.session_state.selected_job_log, language="text", wrap_lines=True)
+        
+        # Streamlit doesn't support a direct height parameter for st.code. 
+        # A workaround is to use a custom HTML block for a larger scrollable area if needed:
+        custom_log_box = f"""
+        <div style="background-color: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; font-family: monospace; height: 300px; overflow-y: auto; white-space: pre-wrap; font-size: 14px;">
+            {st.session_state.selected_job_log}
+        </div>
+        """
+        st.markdown(custom_log_box, unsafe_allow_html=True)
     else:
         st.info("⬅️ Click on a 'View Log' button next to a job on the left to display its execution details here.")
         
