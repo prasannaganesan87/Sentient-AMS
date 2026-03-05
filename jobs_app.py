@@ -8,30 +8,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 DB_FILE = "jobs_db.json"
-DEFAULT_JOBS = {
-    "JOB-001": {"status": "SUCCESSFUL", "log": "Job initialized. Connecting to DB... Data extracted. Pipeline finished successfully without errors."},
-    "JOB-002": {"status": "RUNNING", "log": "Job initialized. Fetching records from external API. Processed 45/100 batches..."},
-    "JOB-003": {"status": "FAILED", "log": "Error connecting to Oracle DB. Timeout after 30s. Retrying... Retry failed. Aborting."},
-    "JOB-004": {"status": "ON_HOLD", "log": "Waiting for upstream dependency JOB-001 to finish processing partitions."},
-    "JOB-005": {"status": "FINISHED", "log": "Daily cleanup task ran. 4000 old records deleted. Disk space reclaimed: 4GB."},
-    "JOB-006": {"status": "SUCCESSFUL", "log": "Report generation finished. PDF saved to S3 bucket /reports/daily-report.pdf"},
-    "JOB-007": {"status": "RUNNING", "log": "Training ML model cluster. Epoch 14/50 completed. Current loss: 0.1423. Accuracy: 94.2%"},
-    "JOB-008": {"status": "FAILED", "log": "OutOfMemoryException in worker node. Process killed. Required memory: 64GB, Available: 32GB."},
-    "JOB-009": {"status": "ON_HOLD", "log": "Manual approval required. Waiting for platform admin to approve deployment to PROD."},
-    "JOB-010": {"status": "FINISHED", "log": "Data synchronization between US-EAST and EU-WEST completed. 15000 records synced."}
-}
 
 VALID_STATUSES = ["RUNNING", "ON_HOLD", "FAILED", "SUCCESSFUL", "FINISHED"]
 
 def load_db():
-    if not os.path.exists(DB_FILE):
-        save_db(DEFAULT_JOBS)
-        return DEFAULT_JOBS
     try:
         with open(DB_FILE, "r") as f:
             return json.load(f)
     except Exception:
-        return DEFAULT_JOBS
+        return "Error while connecting to Job database"
 
 def save_db(data):
     with open(DB_FILE, "w") as f:
