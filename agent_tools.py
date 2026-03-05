@@ -25,3 +25,10 @@ def reset_peoplesoft_pwd(user_id: str) -> str:
         return f"FAILED: API returned {response.status_code} - {response.text}"
     except Exception as e:
         return f"FAILED to call API: {str(e)}"
+
+def execute_tool_by_name(tool_name: str, tool_args: dict) -> str:
+    """Dynamically invokes a tool by its string name if it exists in the module scope."""
+    if tool_name in globals() and hasattr(globals()[tool_name], "invoke"):
+        tool_func = globals()[tool_name]
+        return tool_func.invoke(tool_args)
+    return f"ERROR: Tool '{tool_name}' not found or is not executable."

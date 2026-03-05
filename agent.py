@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 
-from agent_tools import unlock_peoplesoft_account, reset_peoplesoft_pwd
+from agent_tools import unlock_peoplesoft_account, reset_peoplesoft_pwd, execute_tool_by_name
 import time
 
 load_dotenv()
@@ -138,12 +138,9 @@ def execute_action(state: AgentState):
     result = "No Action Taken and Escalated."
     is_resolved = False
     
-    if proposed_tool == "unlock_peoplesoft_account":
-        result = unlock_peoplesoft_account.invoke(tool_args)
-        is_resolved = True
-    elif proposed_tool == "reset_peoplesoft_pwd":
-        result = reset_peoplesoft_pwd.invoke(tool_args)
-        is_resolved = True
+    if proposed_tool:
+        result = execute_tool_by_name(proposed_tool, tool_args)
+        is_resolved = "SUCCESS" in result
         
     time.sleep(1)
 
