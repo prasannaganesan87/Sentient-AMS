@@ -128,18 +128,36 @@ with col1:
     st.markdown("Current active incidents in the system.")
     
     df = db.get_incidents()
-    # Apply styling dynamically mapping (updated for light theme visibility)
-    styled_df = df.style.map(lambda x: 'color: #e74c3c; font-weight: bold;' if x == 'High' or x == 'Critical' else ('color: #e67e22; font-weight: bold;' if x == 'Medium' else 'color: #27ae60; font-weight: bold;'), subset=['Priority'])
     
-    st.dataframe(styled_df, hide_index=True)
+    # Custom Row-based Layout
+    head_cols = st.columns([1, 2.5, 0.8, 0.8, 1, 1.2, 1.2])
+    headers = ["ID", "Description", "Priority", "Status", "Agent", "Created At", "Action"]
+    for col, head in zip(head_cols, headers):
+        col.markdown(f"**<span style='color:#2980b9;'>{head}</span>**", unsafe_allow_html=True)
+        
+    st.markdown("<hr style='margin: 0px; border-bottom: 2px solid #e0e6ed;'/>", unsafe_allow_html=True)
     
-    st.markdown("### Actions")
-    selected_row = st.selectbox("Select Incident ID:", df['Incident_ID'].tolist())
-    
-    if st.button("Assign to AI Agent"):
-        st.session_state.selected_incident = selected_row
-        st.session_state.run_agent_flag = True
-        st.rerun()
+    for _, row in df.iterrows():
+        # Added a minor vertical spacing wrapper for button alignment
+        cols = st.columns([1, 2.5, 0.8, 0.8, 1, 1.2, 1.2])
+        cols[0].write(row['Incident_ID'])
+        cols[1].write(row['Description'])
+        
+        priority_color = "#e74c3c" if row['Priority'] in ['High', 'Critical'] else "#e67e22" if row['Priority'] == 'Medium' else "#27ae60"
+        cols[2].markdown(f"<span style='color:{priority_color}; font-weight:bold;'>{row['Priority']}</span>", unsafe_allow_html=True)
+        
+        cols[3].write(row['Status'])
+        cols[4].write(row['Assigned_Agent'])
+        cols[5].write(row['Created_At'])
+        
+        with cols[6]:
+            is_disabled = row['Status'] in ["Resolved", "Escalated"]
+            if st.button("Assign to AI Agent", key=f"btn_{row['Incident_ID']}", use_container_width=True, disabled=is_disabled):
+                st.session_state.selected_incident = row['Incident_ID']
+                st.session_state.run_agent_flag = True
+                st.rerun()
+                
+        st.markdown("<hr style='margin: 5px 0px; border-top: 1px solid #e0e6ed;'/>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     if st.session_state.selected_incident:

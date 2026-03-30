@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 DB_FILE = "jobs_db.json"
 
-VALID_STATUSES = ["RUNNING", "ON_HOLD", "FAILED", "SUCCESSFUL", "FINISHED"]
+VALID_STATUSES = ["RUNNING", "ON_HOLD", "FAILED", "SUCCESSFUL", "FINISHED","WAITING"]
 
 def load_db():
     try:

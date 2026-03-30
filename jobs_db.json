@@ -4,7 +4,7 @@
         "log": "Job initialized. Connecting to DB... Data extracted. Pipeline finished successfully without errors."
     },
     "JOB-002": {
-        "status": "RUNNING",
+        "status": "FINISHED",
         "log": "Job initialized. Fetching records from external API. Processed 45/100 batches..."
     },
     "JOB-003": {
@@ -32,8 +32,8 @@
         "log": "OutOfMemoryException in worker node. Process killed. Required memory: 64GB, Available: 32GB."
     },
     "JOB-009": {
-        "status": "ON_HOLD",
-        "log": "Manual Hold"
+        "status": "WAITING",
+        "log": ""
     },
     "JOB-010": {
         "status": "FINISHED",

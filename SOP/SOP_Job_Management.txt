@@ -1,0 +1,14 @@
+Title: Job Management Standard Operating Procedure (SOP)
+Purpose: To handle incidents related to background jobs, ETL processes, or any automated tasks that are failing, stuck, or require intervention.
+
+Procedure:
+1. Assess the Incident: Identify the specific job ID (e.g., JOB-002, JOB-991) and the requested outcome from the incident details.
+2. Check Job Status: Use the 'get_job_status' tool to verify the current execution state of the job.
+3. Retrieve Job Logs: 
+   - If the job is stuck or reported as 'FAILED', use the 'get_job_log' tool to read its internal log outputs. This confirms whether it is genuinely stuck or just requires an intervention.
+   - If the job need to be held, ensure the job hasnt started yet (Should be in WAITING status).
+   - If the job need to be released, ensure the job is ON_HOLD
+4. Take Action:
+   - If the user asks to "post complete" the job, use the 'update_job_status' tool to switch the status to 'FINISHED'.
+   - If the user simply requested to pause or hold the job, use the 'update_job_status' tool to change the status to 'ON_HOLD'.
+5. Resolve: Stop taking further action and output nothing once you have successfully investigated and resolved the underlying job status.

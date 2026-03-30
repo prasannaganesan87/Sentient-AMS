@@ -59,7 +59,7 @@ st.markdown("Enter a User ID to view their details from the FastAPI Backend.")
 # Search Input
 col1, col2 = st.columns([0.8, 0.2], vertical_alignment="bottom")
 with col1:
-    user_id_input = st.text_input("User ID (e.g., jdoe, msmith, user):", value="jdoe")
+    user_id_input = st.text_input("User ID (e.g., robert19, msmith2, jtaylor):", value="robert19")
 with col2:
     search_clicked = st.button("Search", use_container_width=True)
 

@@ -5,9 +5,9 @@ app = FastAPI(title="AIMS Mock API")
 
 # Mock database for PeopleSoft users
 USER_DB = {
-    "jdoe": {"status": "LOCKED", "failed_attempts": 3, "password": "old_password"},
-    "msmith": {"status": "ACTIVE", "failed_attempts": 0, "password": "forgotten_password"},
-    "user": {"status": "LOCKED", "failed_attempts": 5, "password": "random_password"}
+    "robert19": {"status": "LOCKED", "failed_attempts": 3, "password": "old_password"},
+    "msmith2": {"status": "ACTIVE", "failed_attempts": 0, "password": "forgotten_password"},
+    "jtaylor": {"status": "LOCKED", "failed_attempts": 5, "password": "random_password"}
 }
 
 class UnlockRequest(BaseModel):

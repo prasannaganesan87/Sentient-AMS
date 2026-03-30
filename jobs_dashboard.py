@@ -38,6 +38,7 @@ st.markdown("""
     .status-FAILED { background-color: #e74c3c; }
     .status-RUNNING { background-color: #007bff; }
     .status-ON_HOLD { background-color: #f39c12; }
+    .status-WAITING { background-color: #898989; }
     .status-UNKNOWN { background-color: #95a5a6; }
     
     .panel {
@@ -96,7 +97,7 @@ with col1:
                 st.markdown(f"<span class='job-id'>🗂️ {job_id}</span>", unsafe_allow_html=True)
             
             with c_status:
-                badge_class = f"status-{status}" if status in ["SUCCESSFUL", "FINISHED", "FAILED", "RUNNING", "ON_HOLD"] else "status-UNKNOWN"
+                badge_class = f"status-{status}" if status in ["SUCCESSFUL", "FINISHED", "FAILED", "RUNNING", "ON_HOLD", "WAITING"] else "status-UNKNOWN"
                 st.markdown(f"<span class='status-badge {badge_class}'>{status}</span>", unsafe_allow_html=True)
                 
             with c_action:

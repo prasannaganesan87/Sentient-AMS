@@ -5,7 +5,7 @@ from datetime import datetime
 INITIAL_INCIDENTS = [
     {
         "Incident_ID": "INC-1001",
-        "Description": "User jdoe is locked out of PeopleSoft after multiple failed login attempts.",
+        "Description": "User robert19 is locked out of PeopleSoft after multiple failed login attempts.",
         "Priority": "High",
         "Status": "New",
         "Assigned_Agent": "Unassigned",
@@ -13,7 +13,7 @@ INITIAL_INCIDENTS = [
     },
     {
         "Incident_ID": "INC-1002",
-        "Description": "User msmith forgot their PeopleSoft password and needs a reset.",
+        "Description": "User msmith2 forgot their PeopleSoft password and needs a reset.",
         "Priority": "Medium",
         "Status": "New",
         "Assigned_Agent": "Unassigned",
@@ -31,6 +31,14 @@ INITIAL_INCIDENTS = [
         "Incident_ID": "INC-1004",
         "Description": "Getting a 500 internal server error when trying to generate the monthly report in the HR module.",
         "Priority": "Critical",
+        "Status": "New",
+        "Assigned_Agent": "Unassigned",
+        "Created_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    },
+    {
+        "Incident_ID": "INC-1005",
+        "Description": "Please post complete the ETL job JOB-002 so it can be retriggered.",
+        "Priority": "High",
         "Status": "New",
         "Assigned_Agent": "Unassigned",
         "Created_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")

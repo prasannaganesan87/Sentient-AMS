@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 
-from agent_tools import unlock_peoplesoft_account, reset_peoplesoft_pwd, execute_tool_by_name
+from agent_tools import unlock_peoplesoft_account, reset_peoplesoft_pwd, get_job_status, update_job_status, get_job_log, execute_tool_by_name
 import time
 
 load_dotenv()
@@ -25,8 +25,8 @@ class AgentState(TypedDict):
 # Initialize LLM
 # Using Gemini 2.5 Flash as standard alias, if Gemini 3 Flash specifically requested by environment it can be adjusted
 # For now, we use the standard identifier that is likely available in the SDK.
-#llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0)
+#llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 
 
@@ -37,10 +37,11 @@ def classify_incident(state: AgentState):
     incident_details = state.get("incident_details", "")
     
     prompt = f"""
-    Classify the following incident description into one of three categories:
+    Classify the following incident description into one of four categories:
     1. 'Account_Unlock' - if the user is locked out after failed attempts.
     2. 'Password_Reset' - if the user forgot their password and needs a reset.
-    3. 'Other' - anything else (performance, bug, general access).
+    3. 'Job_Management' - if a background or automated job is stuck, failed, or needs intervention.
+    4. 'Other' - anything else (performance, bug, general access).
     
     Incident Description: {incident_details}
     
@@ -71,6 +72,8 @@ def retrieve_sop(state: AgentState):
         sop_filename = "SOP_Account_Unlock_PeopleSoft.txt"
     elif category == "Password_Reset":
         sop_filename = "SOP_Password_Reset_PeopleSoft.txt"
+    elif category == "Job_Management":
+        sop_filename = "SOP_Job_Management.txt"
         
     if sop_filename != "N/A":
         sop_path = os.path.join(working_dir, sop_filename)
@@ -92,19 +95,25 @@ def determine_action(state: AgentState):
     
     incident_details = state.get("incident_details", "")
     current_sop = state.get("current_sop", "")
+    action_logs_str = "\n".join(state.get("action_logs", []))
     
     prompt = f"""
     You are an L1 Support Agent. Review the incident details and the SOP document provided.
-    Based on the SOP, determine which tool you must call and extract the necessary arguments (like user_id) from the incident.
+    You can call tools sequentially to resolve the issue. If the issue is resolved or no more actions are needed, do not call any tool.
     
     Incident:
     {incident_details}
     
     SOP:
     {current_sop}
+    
+    History of Actions Taken:
+    {action_logs_str}
+    
+    Based on the History and SOP, determine exactly which single tool you must call next and extract the necessary arguments from the incident. If the incident is fully resolved or no further actions are necessary, output nothing.
     """
     
-    llm_with_tools = llm.bind_tools([unlock_peoplesoft_account, reset_peoplesoft_pwd])
+    llm_with_tools = llm.bind_tools([unlock_peoplesoft_account, reset_peoplesoft_pwd, get_job_status, update_job_status, get_job_log])
     messages = [HumanMessage(content=prompt)]
     response = llm_with_tools.invoke(messages)
     
@@ -124,8 +133,10 @@ def determine_action(state: AgentState):
     }
 
 def human_approval_check(state: AgentState):
-    """Router to determine if we need human approval before execution"""
+    """Router to determine if we need human approval before execution or if we should stop"""
     proposed_tool = state.get("proposed_tool", "")
+    if proposed_tool == "None" or not proposed_tool:
+        return "end"
     if proposed_tool == "reset_peoplesoft_pwd":
         return "human_approval"
     return "execute_action"
@@ -175,13 +186,14 @@ builder.add_conditional_edges(
     "determine_action",
     human_approval_check,
     {
+        "end": END,
         "human_approval": "human_approval_node",
         "execute_action": "execute_action"
     }
 )
 
 builder.add_edge("human_approval_node", "execute_action")
-builder.add_edge("execute_action", END)
+builder.add_edge("execute_action", "determine_action")
 
 # Compile with interrupt
 memory = MemorySaver()
